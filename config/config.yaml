@@ -1,0 +1,157 @@
+# Bankruptcy Prediction Configuration
+
+project:
+  name: "bankruptcy-prediction"
+  version: "1.0.0"
+  random_seed: 42
+
+data:
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+  interim_data_path: "data/interim"
+  external_data_path: "data/external"
+  
+  # Dataset source
+  dataset_url: "https://archive.ics.uci.edu/ml/machine-learning-databases/00365/data.zip"
+  dataset_name: "polish_bankruptcy"
+  
+  # Train/Val/Test split
+  train_size: 0.7
+  val_size: 0.15
+  test_size: 0.15
+  
+  # Sampling strategy
+  stratify: true
+  temporal_split: true
+
+preprocessing:
+  # Missing values
+  missing_threshold: 0.5  # Drop columns with >50% missing
+  imputation_strategy: "median"  # mean, median, mode, knn
+  
+  # Outliers
+  outlier_method: "iqr"  # iqr, zscore, isolation_forest
+  outlier_threshold: 3.0
+  
+  # Scaling
+  scaling_method: "robust"  # standard, minmax, robust
+  
+  # Feature selection
+  variance_threshold: 0.01
+  correlation_threshold: 0.95
+
+features:
+  # Financial ratios
+  create_ratios: true
+  
+  # Altman Z-Score
+  altman_z_score: true
+  
+  # Time-based features
+  lag_features: [1, 2, 3]
+  rolling_windows: [3, 6, 12]
+  
+  # Interactions
+  polynomial_degree: 2
+  interaction_features: false
+
+models:
+  # Cross-validation
+  cv_folds: 5
+  cv_strategy: "stratified"  # stratified, time_series
+  
+  # Class imbalance
+  handle_imbalance: true
+  sampling_strategy: "smote"  # smote, adasyn, random_over, random_under
+  
+  # XGBoost
+  xgboost:
+    n_estimators: 1000
+    max_depth: 6
+    learning_rate: 0.01
+    subsample: 0.8
+    colsample_bytree: 0.8
+    scale_pos_weight: 30
+    early_stopping_rounds: 50
+    
+  # LightGBM
+  lightgbm:
+    n_estimators: 1000
+    max_depth: 6
+    learning_rate: 0.01
+    num_leaves: 31
+    subsample: 0.8
+    colsample_bytree: 0.8
+    is_unbalance: true
+    early_stopping_rounds: 50
+    
+  # CatBoost
+  catboost:
+    iterations: 1000
+    depth: 6
+    learning_rate: 0.01
+    l2_leaf_reg: 3
+    subsample: 0.8
+    auto_class_weights: "Balanced"
+    early_stopping_rounds: 50
+    
+  # Neural Network
+  neural_net:
+    hidden_layers: [128, 64, 32]
+    dropout_rate: 0.3
+    batch_size: 256
+    epochs: 100
+    learning_rate: 0.001
+    optimizer: "adam"
+    early_stopping_patience: 10
+
+hyperparameter_tuning:
+  enabled: true
+  method: "optuna"  # optuna, grid, random
+  n_trials: 100
+  timeout: 3600  # seconds
+  
+evaluation:
+  # Metrics
+  metrics:
+    - "roc_auc"
+    - "pr_auc"
+    - "f1_score"
+    - "precision"
+    - "recall"
+    - "brier_score"
+  
+  # Primary metric for model selection
+  primary_metric: "roc_auc"
+  
+  # Threshold optimization
+  optimize_threshold: true
+  threshold_metric: "f1_score"
+
+ensemble:
+  enabled: true
+  method: "stacking"  # stacking, blending, voting
+  
+  # Stacking
+  meta_model: "logistic_regression"
+  use_probabilities: true
+  
+  # Weights for weighted averaging
+  model_weights:
+    xgboost: 0.35
+    lightgbm: 0.35
+    catboost: 0.30
+
+output:
+  models_path: "models"
+  reports_path: "reports"
+  figures_path: "reports/figures"
+  results_path: "reports/results"
+  
+  # Logging
+  log_level: "INFO"
+  log_file: "bankruptcy_prediction.log"
+  
+  # Model saving
+  save_best_model: true
+  save_all_models: false  
